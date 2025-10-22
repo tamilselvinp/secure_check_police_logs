@@ -8,34 +8,44 @@ import seaborn as sns
 
 # Database connection
 
+import mysql.connector
+import pandas as pd
+import streamlit as st
+
+# Create a new database connection
 def new_connection():
     try:
         connection = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="pttv",
-        database="policeledger")
-        return mysql
+            host="localhost",
+            user="root",
+            password="pttv",
+            database="policeledger"
+        )
+        return connection  # Return the connection, not mysql
     except mysql.connector.Error as e:
-        st.error(f" connection Error: {e}")        
-        return None   
-        
-    #Fetch data from database using Function
+        st.error(f"Connection Error: {e}")
+        return None
 
+# Fetch data using a SQL query
 def fetch_data(query):
-    connection=new_connection()
+    connection = new_connection()
     if connection:
-        try:    
-            cursor=connection.cursor()
+        try:
+            cursor = connection.cursor()
             cursor.execute(query)
-            data=cursor.fetchall()
+            data = cursor.fetchall()
             columns = [desc[0] for desc in cursor.description]
-            df=pd.DataFrame(data,columns=columns)
+            df = pd.DataFrame(data, columns=columns)
             return df
+        except mysql.connector.Error as e:
+            st.error(f"Query Error: {e}")
+            return pd.DataFrame()
         finally:
-            connection.close()
+            cursor.close()       # Properly close cursor
+            connection.close()   # Close connection
     else:
         return pd.DataFrame()
+
 
 # Streamlit UI
 
